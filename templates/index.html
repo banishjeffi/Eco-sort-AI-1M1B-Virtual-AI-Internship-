@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoSort AI — Smart Waste Segregation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    
+    :root {
+      /* Light theme — biophilic greens */
+      --forest:        #1C3A28;
+      --sage:          #3D6B4F;
+      --leaf:          #5A9E6F;
+      --sprout:        #7CC47F;
+      --mist:          #E6F4EA;
+      --dew:           #F2FAF4;
+      --petal:         #FAFDF8;
+      --bark:          #6B5344;
+      --earth:         #A08060;
+      --amber:         #D4924A;
+
+      --bg:            #F4FAF5;
+      --bg-card:       #FFFFFF;
+      --bg-inset:      #EFF7F1;
+      --bg-hover:      #E8F5EA;
+      --border:        rgba(60, 107, 79, 0.14);
+      --border-focus:  #5A9E6F;
+
+      --text-primary:  #1A3022;
+      --text-secondary:#3D5444;
+      --text-muted:    #7A967F;
+      --text-on-dark:  #F2FAF4;
+
+      --shadow-sm:  0 2px 8px rgba(28, 58, 40, 0.07);
+      --shadow-md:  0 6px 20px rgba(28, 58, 40, 0.10);
+      --shadow-lg:  0 16px 48px rgba(28, 58, 40, 0.13);
+      --shadow-glow:0 0 0 3px rgba(90, 158, 111, 0.22);
+
+      --r-sm:  12px;
+      --r-md:  18px;
+      --r-lg:  24px;
+      --r-xl:  32px;
+
+      --ease:  cubic-bezier(0.4, 0, 0.2, 1);
+      --dur:   200ms;
+    }
+
+    [data-theme="dark"] {
+      --forest:        #A8D5B0;
+      --sage:          #7BBF90;
+      --leaf:          #5A9E6F;
+      --sprout:        #4A8B60;
+      --mist:          #1A2E20;
+      --dew:           #152018;
+      --petal:         #0F1A12;
+      --bark:          #C4A882;
+      --earth:         #B8966E;
+      --amber:         #E0A85C;
+
+      --bg:            #0D1710;
+      --bg-card:       #142018;
+      --bg-inset:      #1A2A1E;
+      --bg-hover:      #1F3026;
+      --border:        rgba(90, 158, 111, 0.18);
+      --border-focus:  #7BBF90;
+
+      --text-primary:  #E8F5EA;
+      --text-secondary:#B8D4BC;
+      --text-muted:    #7A9E80;
+      --text-on-dark:  #E8F5EA;
+
+      --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md:  0 6px 20px rgba(0, 0, 0, 0.4);
+      --shadow-lg:  0 16px 48px rgba(0, 0, 0, 0.5);
+      --shadow-glow:0 0 0 3px rgba(90, 158, 111, 0.30);
+    }
+    
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+    }
+
+    .bio-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bio-blob {
+      position: absolute;
+      border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+      animation: morphBlob 20s ease-in-out infinite alternate;
+    }
+    .bio-blob--1 {
+      width: 70vmax; height: 70vmax;
+      top: -30%; right: -20%;
+      background: radial-gradient(ellipse at 40% 40%, var(--sprout), transparent 70%);
+      opacity: 0.065;
+      animation-duration: 22s;
+    }
+    .bio-blob--2 {
+      width: 55vmax; height: 55vmax;
+      bottom: -25%; left: -15%;
+      background: radial-gradient(ellipse at 60% 60%, var(--leaf), transparent 70%);
+      opacity: 0.05;
+      animation-duration: 28s;
+      animation-direction: alternate-reverse;
+    }
+    .bio-blob--3 {
+      width: 35vmax; height: 35vmax;
+      top: 40%; left: 30%;
+      background: radial-gradient(ellipse at 50% 50%, var(--amber), transparent 70%);
+      opacity: 0.03;
+      animation-duration: 35s;
+    }
+
+    @keyframes morphBlob {
+      0%   { border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%; transform: translate(0,0) scale(1); }
+      33%  { border-radius: 40% 60% 45% 55% / 55% 45% 60% 40%; }
+      66%  { border-radius: 55% 45% 60% 40% / 40% 60% 45% 55%; }
+      100% { border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%; transform: translate(2%, -3%) scale(1.04); }
+    }
+
+    /* Leaf vein SVG overlay */
+    .bio-vein {
+      position: absolute;
+      opacity: 0.04;
+      color: var(--leaf);
+    }
+    .bio-vein--tr { top: 0; right: 0; width: 400px; }
+    .bio-vein--bl { bottom: 0; left: 0; width: 340px; transform: rotate(180deg); }
+
+    [data-theme="dark"] .bio-blob--1 { opacity: 0.08; }
+    [data-theme="dark"] .bio-blob--2 { opacity: 0.06; }
+    [data-theme="dark"] .bio-vein   { opacity: 0.06; }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0 8px;
+      margin-bottom: 4px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--sage), var(--sprout));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .brand-icon svg { width: 20px; height: 20px; }
+    .brand-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .brand-name span {
+      background: linear-gradient(135deg, var(--sage), var(--sprout));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.2px;
+    }
+    .chip-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--sprout);
+      animation: pulse 2.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.8); }
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: relative;
+      width: 52px; height: 28px;
+      background: var(--bg-inset);
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      flex-shrink: 0;
+    }
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .theme-toggle__thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--sage);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
+    }
+    .theme-toggle__thumb svg { width: 12px; height: 12px; }
+    [data-theme="dark"] .theme-toggle__thumb {
+      transform: translateX(24px);
+      background: var(--amber);
+    }
+    .theme-toggle__icon-sun  { display: none; }
+    .theme-toggle__icon-moon { display: block; }
+    [data-theme="dark"] .theme-toggle__icon-sun  { display: block; }
+    [data-theme="dark"] .theme-toggle__icon-moon { display: none; }
+
+    .hero {
+      text-align: center;
+      padding: 40px 20px 36px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--mist);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--sage);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero-eyebrow svg { width: 14px; height: 14px; }
+    .hero h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      letter-spacing: -0.8px;
+      margin-bottom: 16px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--sage) 0%, var(--sprout) 60%, var(--amber) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      transition:
+        box-shadow var(--dur) var(--ease),
+        border-color var(--dur) var(--ease),
+        background var(--dur) var(--ease);
+      margin-bottom: 20px;
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+
+    .card--classify {
+      border-radius: var(--r-xl);
+      padding: 32px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .card-header-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--r-sm);
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--sage);
+      flex-shrink: 0;
+    }
+    .card-header-icon svg { width: 20px; height: 20px; }
+    .card-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+    .card-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .field { flex: 1; }
+    .field--narrow { flex: 0 0 130px; }
+
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.1px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 17px; height: 17px;
+      pointer-events: none;
+      transition: color var(--dur) var(--ease);
+    }
+    .input-wrap input:focus ~ .input-icon,
+    .input-wrap:focus-within .input-icon { color: var(--leaf); }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background: var(--bg-inset);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      transition:
+        border-color var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease),
+        background var(--dur) var(--ease);
+      appearance: none;
+    }
+    input[type="number"] { padding-left: 16px; }
+    input[type="text"]::placeholder { color: var(--text-muted); }
+    input[type="text"]:hover,
+    input[type="number"]:hover { border-color: rgba(90,158,111,0.35); }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-glow);
+      background: var(--bg-card);
+    }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-md);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--bg-inset);
+      transition:
+        border-color var(--dur) var(--ease),
+        background var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--leaf);
+      background: var(--bg-hover);
+      box-shadow: var(--shadow-glow);
+    }
+    .upload-zone:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .upload-zone.has-image { padding: 10px; }
+    .upload-zone__icon {
+      width: 48px; height: 48px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+      color: var(--sage);
+    }
+    .upload-zone__icon svg { width: 24px; height: 24px; }
+    .upload-zone strong { display: block; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 4px; }
+    .upload-zone small { color: var(--text-muted); font-size: 0.8rem; }
+    .upload-preview {
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 10px;
+      display: none;
+      margin: 0 auto;
+    }
+    .upload-zone.has-image .upload-preview   { display: block; }
+    .upload-zone.has-image .upload-placeholder { display: none; }
+
+    /* ── Camera button ── */
+    .btn-camera {
+      width: 100%;
+      margin-top: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 18px;
+      background: var(--bg-inset);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition:
+        background var(--dur) var(--ease),
+        border-color var(--dur) var(--ease),
+        color var(--dur) var(--ease);
+    }
+    .btn-camera svg { width: 18px; height: 18px; color: var(--sage); }
+    .btn-camera:hover {
+      border-color: var(--leaf);
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .btn-camera:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+    .btn-primary {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, var(--forest) 0%, var(--sage) 100%);
+      border: none;
+      border-radius: var(--r-md);
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(28, 58, 40, 0.28);
+      transition:
+        transform var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease),
+        opacity var(--dur) var(--ease);
+      letter-spacing: 0.1px;
+      margin-top: 22px;
+    }
+    .btn-primary svg { width: 20px; height: 20px; }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(28, 58, 40, 0.35);
+    }
+    .btn-primary:active  { transform: translateY(0); box-shadow: 0 2px 10px rgba(28,58,40,0.2); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-primary:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 3px; }
+
+    .spin { animation: spinAnim 0.8s linear infinite; }
+    @keyframes spinAnim { to { transform: rotate(360deg); } }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition:
+        transform var(--dur) var(--ease),
+        box-shadow var(--dur) var(--ease);
+      cursor: default;
+    }
+    .step-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .step-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--leaf);
+      margin-bottom: 10px;
+    }
+    .step-icon {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--sage);
+      margin: 0 auto 12px;
+    }
+    .step-icon svg { width: 22px; height: 22px; }
+    .step-card h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .step-card p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .loading.show { display: block; }
+    .loading-ring {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--leaf);
+      border-radius: 50%;
+      animation: spinAnim 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    .loading p { color: var(--text-muted); font-size: 0.95rem; }
+    .loading small { color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px; }
+    .dot-anim::after {
+      content: '';
+      animation: dots 1.6s steps(4, end) infinite;
+    }
+    @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+    .results { display: none; }
+    .results.show {
+      display: block;
+      animation: fadeUp 0.45s var(--ease);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--leaf);
+      margin-bottom: 6px;
+    }
+
+    /* ── Classification result ── */
+    .result-classify {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .result-classify__left { flex: 1; min-width: 200px; }
+    .result-classify__right { flex: 0 0 auto; }
+
+    .waste-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .waste-badge .badge-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* category colors */
+    .cat-organic          { background: #DCFCE7; color: #14532D; --dot-c: #22C55E; }
+    .cat-plastic          { background: #DBEAFE; color: #1E3A8A; --dot-c: #3B82F6; }
+    .cat-metal            { background: #F3E8FF; color: #581C87; --dot-c: #A855F7; }
+    .cat-glass            { background: #FEF3C7; color: #78350F; --dot-c: #F59E0B; }
+    .cat-paper            { background: #E0E7FF; color: #312E81; --dot-c: #6366F1; }
+    .cat-ewaste           { background: #FCE7F3; color: #831843; --dot-c: #EC4899; }
+    .cat-hazardous        { background: #FEE2E2; color: #7F1D1D; --dot-c: #EF4444; }
+    .cat-landfill         { background: #F1F5F9; color: #334155; --dot-c: #94A3B8; }
+    [data-theme="dark"] .cat-organic   { background: #052e16; color: #86efac; }
+    [data-theme="dark"] .cat-plastic   { background: #1e3a5f; color: #93c5fd; }
+    [data-theme="dark"] .cat-metal     { background: #3b0764; color: #d8b4fe; }
+    [data-theme="dark"] .cat-glass     { background: #451a03; color: #fcd34d; }
+    [data-theme="dark"] .cat-paper     { background: #1e1b4b; color: #a5b4fc; }
+    [data-theme="dark"] .cat-ewaste    { background: #500724; color: #f9a8d4; }
+    [data-theme="dark"] .cat-hazardous { background: #450a0a; color: #fca5a5; }
+    [data-theme="dark"] .cat-landfill  { background: #0f172a; color: #94a3b8; }
+    .waste-badge .badge-dot { background: var(--dot-c, var(--leaf)); }
+
+    /* ── Confidence bar ── */
+    .confidence {
+      margin-top: 14px;
+    }
+    .confidence-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .confidence-labels span { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+    .confidence-labels strong { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+    .confidence-track {
+      height: 8px;
+      background: var(--bg-inset);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--leaf), var(--sprout));
+      transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .reason-text {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ── Info notes ── */
+    .note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: var(--r-sm);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-top: 14px;
+    }
+    .note svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; }
+    .note--green { background: #EFF9F0; color: #1A4226; border-left: 3px solid var(--leaf); }
+    .note--amber { background: #FFF8ED; color: #5C3A0A; border-left: 3px solid var(--amber); }
+    .note--red   { background: #FFF1F1; color: #7F1D1D; border-left: 3px solid #EF4444; }
+    [data-theme="dark"] .note--green { background: #0A1F0E; color: #86efac; }
+    [data-theme="dark"] .note--amber { background: #1F1005; color: #fcd34d; }
+    [data-theme="dark"] .note--red   { background: #1F0505; color: #fca5a5; }
+    .note--green svg { color: var(--leaf); }
+    .note--amber svg { color: var(--amber); }
+    .note--red svg   { color: #EF4444; }
+
+    /* ── Guidance box ── */
+    .guidance {
+      background: var(--bg-inset);
+      border-left: 4px solid var(--sage);
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      padding: 16px 20px;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ── Facility cards ── */
+    .facility {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      margin-bottom: 10px;
+      transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    }
+    .facility:hover { border-color: var(--leaf); box-shadow: var(--shadow-sm); }
+    .facility:last-child { margin-bottom: 0; }
+    .facility-num {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--mist);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--sage);
+      flex-shrink: 0;
+    }
+    .facility-body { flex: 1; }
+    .facility-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .facility-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .facility-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .facility-meta svg { width: 13px; height: 13px; color: var(--sage); flex-shrink: 0; }
+    .facility-empty {
+      text-align: center;
+      padding: 28px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Impact grid ── */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .impact-item {
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 16px 10px;
+      text-align: center;
+      transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    }
+    .impact-item:hover { border-color: var(--leaf); box-shadow: var(--shadow-sm); }
+    .impact-val {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .impact-lbl {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .error-bar {
+      display: none;
+      background: #FFF1F1;
+      border: 1px solid #FECACA;
+      border-left: 4px solid #EF4444;
+      border-radius: var(--r-sm);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #7F1D1D;
+    }
+    [data-theme="dark"] .error-bar { background: #1F0505; border-color: #7f1d1d; color: #fca5a5; }
+    .error-bar.show { display: flex; align-items: center; gap: 10px; }
+    .error-bar svg { width: 18px; height: 18px; color: #EF4444; flex-shrink: 0; }
+
+    footer {
+      text-align: center;
+      padding: 32px 0 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+    }
+    footer p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    footer p svg { width: 15px; height: 15px; color: var(--leaf); }
+    footer a { color: var(--sage); text-decoration: none; }
+    footer a:hover { color: var(--leaf); text-decoration: underline; }
+
+    .sr-only {
+      position: absolute; width:1px; height:1px;
+      padding:0; margin:-1px; overflow:hidden;
+      clip:rect(0,0,0,0); border:0;
+    }
+    :focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .bio-blob { animation: none; }
+    }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 0 16px 48px; }
+      .card--classify { padding: 22px; border-radius: var(--r-lg); }
+      .card { padding: 20px; border-radius: var(--r-md); }
+      .steps { grid-template-columns: 1fr; gap: 12px; }
+      .impact-grid { grid-template-columns: repeat(2, 1fr); }
+      .impact-item:nth-child(5) { grid-column: 1 / -1; }
+      .field-row { flex-direction: column; }
+      .field--narrow { flex: 1; }
+      .hero h1 { font-size: 1.7rem; }
+      .hero p { font-size: 0.95rem; }
+    }
+    @media (max-width: 420px) {
+      .brand-name { font-size: 1.1rem; }
+      .chip { display: none; }
+      .hero h1 { font-size: 1.4rem; }
+      .card--classify { padding: 18px; }
+    }
+    @media (min-width: 960px) {
+      .steps { grid-template-columns: repeat(3, 1fr); }
+      .impact-grid { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Organic background canvas -->
+  <div class="bio-canvas" aria-hidden="true">
+    <div class="bio-blob bio-blob--1"></div>
+    <div class="bio-blob bio-blob--2"></div>
+    <div class="bio-blob bio-blob--3"></div>
+
+    <!-- Leaf vein top-right -->
+    <svg class="bio-vein bio-vein--tr" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M380 20 Q300 80 200 200 Q140 270 80 380" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M340 10 Q220 100 180 200 Q140 290 60 380" stroke="currentColor" stroke-width="1"/>
+      <path d="M200 20 Q230 90 200 200" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M300 20 Q250 90 200 200" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M200 200 Q160 240 80 300" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M200 200 Q170 250 140 320" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M200 200 Q230 240 280 290" stroke="currentColor" stroke-width="0.6"/>
+    </svg>
+
+    <!-- Leaf vein bottom-left -->
+    <svg class="bio-vein bio-vein--bl" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M380 20 Q300 80 200 200 Q140 270 80 380" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M340 10 Q220 100 180 200 Q140 290 60 380" stroke="currentColor" stroke-width="1"/>
+      <path d="M200 20 Q230 90 200 200" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M300 20 Q250 90 200 200" stroke="currentColor" stroke-width="0.8"/>
+      <path d="M200 200 Q160 240 80 300" stroke="currentColor" stroke-width="0.8"/>
+    </svg>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ── NAV ── -->
+    <nav class="topbar">
+      <a class="brand" href="#" aria-label="EcoSort AI home">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v6m0 0-2.5-2.5M12 8l2.5-2.5M12 8v14"/>
+            <path d="M5 17c1-3 3-5 7-5s6 2 7 5"/>
+          </svg>
+        </div>
+        <span class="brand-name">Eco<span>Sort</span> AI</span>
+      </a>
+
+      <div class="topbar-right">
+        <div class="chip" aria-label="AI powered">
+          <span class="chip-dot" aria-hidden="true"></span>
+          IBM Granite
+        </div>
+        <button
+          class="theme-toggle"
+          id="theme-toggle"
+          role="switch"
+          aria-checked="false"
+          aria-label="Toggle dark mode"
+          title="Toggle dark mode"
+        >
+          <span class="theme-toggle__thumb" aria-hidden="true">
+            <!-- Moon icon (shown in light mode) -->
+            <svg class="theme-toggle__icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <!-- Sun icon (shown in dark mode) -->
+            <svg class="theme-toggle__icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <header class="hero">
+      <div class="hero-eyebrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+          <path d="M12 8v4l3 3"/>
+        </svg>
+        Smart Waste Classification
+      </div>
+      <h1>Sort smarter,<br><em>live greener.</em></h1>
+      <p>Describe or photograph your waste — AI identifies the category, disposal method, and local recycling centers in seconds.</p>
+    </header>
+
+    <!-- ── ERROR ── -->
+    <div class="error-bar" id="error-bar" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="error-text"></span>
+    </div>
+
+    <!-- ── CLASSIFY CARD ── -->
+    <div class="card card--classify">
+      <div class="card-header">
+        <div class="card-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div>
+          <h2>Classify your waste</h2>
+          <p>Describe the item or upload a photo to get started</p>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="field-row">
+        <div class="field">
+          <label for="item-input">What is this waste item?</label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              id="item-input"
+              placeholder="e.g. plastic bottle, banana peel, old phone…"
+              autocomplete="off"
+              aria-describedby="item-hint"
+            />
+          </div>
+          <span id="item-hint" class="sr-only">Press Enter or click the button to analyse</span>
+        </div>
+        <div class="field field--narrow">
+          <label for="weight-input">Weight (kg)</label>
+          <input type="number" id="weight-input" value="1" min="0.1" max="100" step="0.1" aria-label="Weight in kilograms" />
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div>
+        <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Photo (optional)</label>
+        <div
+          class="upload-zone"
+          id="upload-zone"
+          role="button"
+          tabindex="0"
+          aria-label="Upload or drag and drop a waste photo"
+        >
+          <div class="upload-placeholder">
+            <div class="upload-zone__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <strong>Drag &amp; drop or click to upload</strong>
+            <small>JPG, PNG, WebP — up to 10 MB</small>
+          </div>
+          <img class="upload-preview" id="upload-preview" alt="Uploaded waste item preview" />
+          <input type="file" id="file-input" accept="image/*" style="display:none;" />
+        </div>
+        <button type="button" class="btn-camera" id="camera-btn" aria-label="Open camera to take a photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Take a photo instead
+        </button>
+      </div>
+
+      <!-- CTA -->
+      <button class="btn-primary" id="classify-btn" aria-busy="false">
+        <span class="btn-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Classify Waste
+        </span>
+        <span class="btn-spinner" style="display:none;align-items:center;gap:8px;">
+          <svg class="spin" viewBox="0 0 24 24" style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          Analysing…
+        </span>
+      </button>
+    </div>
+
+    <!-- ── LOADING ── -->
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <div class="loading-ring" aria-hidden="true"></div>
+      <p>Classifying your item<span class="dot-anim"></span></p>
+      <small>IBM Granite model at work</small>
+    </div>
+
+    <!-- ── HOW IT WORKS ── -->
+    <div class="steps" role="list">
+      <div class="step-card" role="listitem">
+        <div class="step-num">Step 01</div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <h3>Describe or upload</h3>
+        <p>Type what your waste item is, or capture it with your camera. Text and image both work.</p>
+      </div>
+      <div class="step-card" role="listitem">
+        <div class="step-num">Step 02</div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <h3>AI classifies instantly</h3>
+        <p>IBM Granite analyses the item, measures confidence, and determines the safest disposal path.</p>
+      </div>
+      <div class="step-card" role="listitem">
+        <div class="step-num">Step 03</div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <h3>Get your impact</h3>
+        <p>Disposal guidance, safety alerts, nearby collection centres, and your environmental footprint.</p>
+      </div>
+    </div>
+
+    <!-- ── RESULTS ── -->
+    <div class="results" id="results" role="region" aria-live="polite" aria-label="Classification results">
+
+      <!-- Classification -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <div class="section-label">Classification</div>
+            <h2>What we found</h2>
+          </div>
+        </div>
+        <div class="result-classify">
+          <div class="result-classify__left">
+            <span class="waste-badge" id="category-badge">
+              <span class="badge-dot" aria-hidden="true"></span>
+              <span id="category-text">—</span>
+            </span>
+            <div class="confidence" aria-label="Confidence level">
+              <div class="confidence-labels">
+                <span>Confidence</span>
+                <strong id="conf-pct">0%</strong>
+              </div>
+              <div class="confidence-track">
+                <div class="confidence-fill" id="conf-fill" style="width:0%"></div>
+              </div>
+            </div>
+            <p class="reason-text" id="reason-text"></p>
+          </div>
+        </div>
+        <div class="note note--green" id="did-you-know-wrap" style="display:none;" aria-label="Did you know">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="did-you-know"></span>
+        </div>
+      </div>
+
+      <!-- Disposal instructions -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div>
+            <div class="section-label">Disposal</div>
+            <h2>How to dispose of it</h2>
+          </div>
+        </div>
+        <div class="guidance" id="disposal-text"></div>
+        <div class="note note--amber" id="safety-note-wrap" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span id="safety-note"></span>
+        </div>
+      </div>
+
+      <!-- Detailed guidance -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="section-label">Guide</div>
+            <h2>Detailed guidance</h2>
+          </div>
+        </div>
+        <div class="guidance" id="detailed-text"></div>
+      </div>
+
+      <!-- Facilities -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="section-label">Near you</div>
+            <h2>Collection centres</h2>
+          </div>
+        </div>
+        <div id="facilities-list"></div>
+      </div>
+
+      <!-- Impact -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="section-label">Environment</div>
+            <h2>Your impact today</h2>
+          </div>
+        </div>
+        <div class="impact-grid" id="impact-grid"></div>
+        <div class="note note--green" id="impact-fact-wrap" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span id="impact-fact"></span>
+        </div>
+      </div>
+
+    </div><!-- /results -->
+
+    <!-- FOOTER -->
+    <footer>
+      <p>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
+        Built with IBM Granite &amp; watsonx.ai
+        &nbsp;·&nbsp;
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        For a cleaner planet
+      </p>
+    </footer>
+
+  </div><!-- /wrap -->
+
+  <script>
+    const html = document.documentElement;
+    const themeBtn = document.getElementById('theme-toggle');
+
+    const saved = localStorage.getItem('ecosort-theme');
+    if (saved) {
+      html.setAttribute('data-theme', saved);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      html.setAttribute('data-theme', 'dark');
+    }
+
+    function syncToggle() {
+      const dark = html.getAttribute('data-theme') === 'dark';
+      themeBtn.setAttribute('aria-checked', dark ? 'true' : 'false');
+    }
+    syncToggle();
+
+    themeBtn.addEventListener('click', () => {
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('ecosort-theme', next);
+      syncToggle();
+    });
+    themeBtn.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); themeBtn.click(); }
+    });
+
+    const itemInput      = document.getElementById('item-input');
+    const weightInput    = document.getElementById('weight-input');
+    const uploadZone     = document.getElementById('upload-zone');
+    const fileInput      = document.getElementById('file-input');
+    const uploadPreview  = document.getElementById('upload-preview');
+    const cameraBtn      = document.getElementById('camera-btn');
+    const classifyBtn    = document.getElementById('classify-btn');
+    const btnLabel       = classifyBtn.querySelector('.btn-label');
+    const btnSpinner     = classifyBtn.querySelector('.btn-spinner');
+    const loadingEl      = document.getElementById('loading');
+    const resultsEl      = document.getElementById('results');
+    const errorBar       = document.getElementById('error-bar');
+    const errorText      = document.getElementById('error-text');
+
+    let currentImage = null;
+
+    uploadZone.addEventListener('click', e => {
+      if (e.target !== uploadPreview) fileInput.click();
+    });
+    uploadZone.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+    uploadZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')) loadImage(f);
+    });
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) loadImage(e.target.files[0]);
+    });
+
+    function loadImage(file) {
+      if (file.size > 10 * 1024 * 1024) { showError('File too large — max 10 MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        currentImage = ev.target.result;
+        uploadPreview.src = currentImage;
+        uploadZone.classList.add('has-image');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    cameraBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        video.onloadeddata = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          currentImage = canvas.toDataURL('image/jpeg', 0.85);
+          uploadPreview.src = currentImage;
+          uploadZone.classList.add('has-image');
+          stream.getTracks().forEach(t => t.stop());
+        };
+      } catch {
+        showError('Camera access denied or unavailable on this device.');
+      }
+    });
+
+    classifyBtn.addEventListener('click', classify);
+    itemInput.addEventListener('keypress', e => { if (e.key === 'Enter') classify(); });
+
+    async function classify() {
+      const item   = itemInput.value.trim();
+      const weight = parseFloat(weightInput.value) || 1;
+
+      if (!item && !currentImage) {
+        showError('Please describe the item or upload a photo before classifying.');
+        return;
+      }
+
+      setLoading(true);
+      hideError();
+
+      try {
+        const res  = await fetch('/api/classify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item, image: currentImage, weight })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Classification failed.');
+        renderResults(data);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    const CAT_CLASS = {
+      'Organic':                    'cat-organic',
+      'Recyclable (Plastic)':       'cat-plastic',
+      'Recyclable (Metal)':         'cat-metal',
+      'Recyclable (Glass)':         'cat-glass',
+      'Recyclable (Paper/Cardboard)':'cat-paper',
+      'E-waste':                    'cat-ewaste',
+      'Hazardous':                  'cat-hazardous',
+      'Landfill/Reject':            'cat-landfill',
+    };
+
+    function renderResults(data) {
+      const { classification: cls, guidelines: gui, facilities: fac, impact: imp } = data;
+
+      // Badge
+      const badge = document.getElementById('category-badge');
+      badge.className = 'waste-badge ' + (CAT_CLASS[cls.category] || '');
+      document.getElementById('category-text').textContent = cls.category;
+
+      // Confidence
+      const pct = Math.round(cls.confidence * 100);
+      document.getElementById('conf-pct').textContent = pct + '%';
+      document.getElementById('conf-fill').style.width = pct + '%';
+      document.getElementById('reason-text').textContent = cls.reason;
+
+      // Did you know
+      const dykWrap = document.getElementById('did-you-know-wrap');
+      if (cls.did_you_know) {
+        document.getElementById('did-you-know').textContent = cls.did_you_know;
+        dykWrap.style.display = 'flex';
+      } else { dykWrap.style.display = 'none'; }
+
+      // Disposal
+      document.getElementById('disposal-text').textContent = cls.disposal_instruction;
+      const snWrap = document.getElementById('safety-note-wrap');
+      if (cls.safety_note && cls.safety_note !== 'None') {
+        document.getElementById('safety-note').textContent = cls.safety_note;
+        snWrap.style.display = 'flex';
+      } else { snWrap.style.display = 'none'; }
+
+      // Guidance
+      document.getElementById('detailed-text').textContent = gui.answer;
+
+      // Facilities
+      const facList = document.getElementById('facilities-list');
+      if (fac && fac.length > 0) {
+        facList.innerHTML = fac.slice(0, 5).map((f, i) => `
+          <div class="facility">
+            <div class="facility-num" aria-hidden="true">${i + 1}</div>
+            <div class="facility-body">
+              <div class="facility-name">${esc(f.name)}</div>
+              <div class="facility-meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  ${esc(f.address)}
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  ${f.distance_km} km away
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${esc(f.hours)}
+                </span>
+                ${f.phone ? `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${esc(f.phone)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        facList.innerHTML = '<p class="facility-empty">No centres found nearby — check your municipal website.</p>';
+      }
+
+      // Impact
+      document.getElementById('impact-grid').innerHTML = `
+        <div class="impact-item">
+          <div class="impact-val">${imp.co2_saved_kg} kg</div>
+          <div class="impact-lbl">CO₂ Saved</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-val">${imp.landfill_diverted_kg} kg</div>
+          <div class="impact-lbl">Landfill Diverted</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-val">${esc(imp.trees_equivalent)}</div>
+          <div class="impact-lbl">Trees / Year</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-val">${imp.energy_saved_kwh} kWh</div>
+          <div class="impact-lbl">Energy Saved</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-val">${imp.water_saved_liters} L</div>
+          <div class="impact-lbl">Water Saved</div>
+        </div>
+      `;
+
+      const ifWrap = document.getElementById('impact-fact-wrap');
+      if (imp.fun_fact) {
+        document.getElementById('impact-fact').textContent = imp.fun_fact;
+        ifWrap.style.display = 'flex';
+      } else { ifWrap.style.display = 'none'; }
+
+      resultsEl.classList.add('show');
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function setLoading(on) {
+      classifyBtn.disabled = on;
+      classifyBtn.setAttribute('aria-busy', on);
+      btnLabel.style.display   = on ? 'none' : 'flex';
+      btnSpinner.style.display = on ? 'flex' : 'none';
+      if (on) {
+        loadingEl.classList.add('show');
+        resultsEl.classList.remove('show');
+      } else {
+        loadingEl.classList.remove('show');
+      }
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBar.classList.add('show');
+      errorBar.focus();
+    }
+
+    function hideError() {
+      errorBar.classList.remove('show');
+    }
+  </script>
+</body>
+</html>
